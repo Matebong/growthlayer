@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#173B25">
+<title>Growth Layers — Simulator Investasi Jangka Panjang</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,560;9..144,650&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F5EE;--bg-soft:#EBEEE2;--surface:#fff;--ink:#1B2418;--ink-muted:#626C5E;--ink-faint:#929A8C;
+  --forest:#2F6844;--forest-deep:#173B25;--forest-soft:#DCEBE0;--gold:#D9A441;--gold-deep:#B9822A;--gold-soft:#F7EACD;
+  --line:#E0E4D6;--r-lg:22px;--r-md:16px;--r-sm:12px;
+  --shadow:0 1px 2px rgba(27,36,24,.04),0 12px 32px -16px rgba(27,36,24,.2);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Plus Jakarta Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh;
+  background-image:radial-gradient(900px 420px at 85% -80px,rgba(217,164,65,.16),transparent 70%),radial-gradient(700px 400px at -10% 0,rgba(47,104,68,.12),transparent 70%);background-repeat:no-repeat}
+.wrap{max-width:1160px;margin:0 auto;padding:max(20px,env(safe-area-inset-top)) clamp(16px,4vw,32px) calc(56px + env(safe-area-inset-bottom))}
+
+/* Top bar */
+.top-menu{display:flex;justify-content:space-between;align-items:center;margin-bottom:clamp(20px,4vw,36px);gap:12px}
+.brand{display:flex;align-items:center;gap:10px;font-family:'Fraunces',serif;font-weight:650;font-size:18px;letter-spacing:-.01em}
+.brand svg{width:34px;height:34px;flex:none}
+.lang-toggle-btn{appearance:none;background:var(--surface);border:1px solid var(--line);color:var(--forest-deep);font:600 12px 'IBM Plex Mono',monospace;letter-spacing:.03em;
+  padding:10px 16px;min-height:40px;border-radius:999px;cursor:pointer;display:inline-flex;align-items:center;gap:8px;box-shadow:var(--shadow);transition:.15s}
+.lang-toggle-btn::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--gold-deep)}
+.lang-toggle-btn:hover{border-color:var(--forest);background:var(--forest-soft)}
+.lang-toggle-btn:active{transform:scale(.97)}
+:focus-visible{outline:2px solid var(--forest);outline-offset:2px}
+
+/* Hero */
+header.hero{max-width:680px;margin-bottom:clamp(22px,4vw,34px);display:flex;flex-direction:column;gap:12px}
+h1{font-family:'Fraunces',serif;font-weight:650;font-size:clamp(28px,6vw,46px);line-height:1.08;letter-spacing:-.02em;margin:0;text-wrap:balance}
+.hero-sub{color:var(--ink-muted);font-size:clamp(14.5px,2.2vw,16px);line-height:1.6;margin:0}
+
+/* Tabs: segmented control */
+.tabbar{display:inline-flex;gap:4px;padding:5px;background:var(--bg-soft);border:1px solid var(--line);border-radius:999px;margin-bottom:clamp(20px,4vw,30px)}
+.tab-btn{appearance:none;border:0;background:transparent;font:600 14px 'Plus Jakarta Sans',sans-serif;color:var(--ink-muted);padding:11px 22px;min-height:44px;border-radius:999px;cursor:pointer;transition:.18s;white-space:nowrap}
+.tab-btn:hover{color:var(--ink)}
+.tab-btn.active{background:var(--forest-deep);color:#fff;box-shadow:0 6px 14px -6px rgba(23,59,37,.6)}
+.page{display:none}
+.page.active{display:block;animation:fade .3s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* Layout */
+.layout{display:grid;grid-template-columns:minmax(0,1fr);gap:24px;align-items:start}
+.panel,.fi-card,.chart-card,.stat-card{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow)}
+.panel{border-radius:var(--r-lg);padding:26px 24px 24px}
+.panel{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:22px 28px;align-items:start}
+.panel h2,.panel .panel-sub,#fx-field,.reset-btn{grid-column:1/-1}
+.panel h2{margin:0}
+.panel .panel-sub{margin:-14px 0 2px}
+.panel .field{margin:0}
+.reset-btn{margin-top:0;justify-self:end;width:auto;padding:0 22px}
+.panel h2,.fi-card h2{font-family:'Fraunces',serif;font-weight:600;font-size:20px;margin:0 0 4px}
+.panel-sub{color:var(--ink-muted);font-size:13.5px;margin:0 0 24px;line-height:1.55}
+.field{margin-bottom:24px}
+.field:last-of-type{margin-bottom:0}
+.field-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px;flex-wrap:wrap}
+.field-label{font-size:13.5px;font-weight:600}
+.field-hint{font-size:11.5px;color:var(--ink-faint);font-weight:500;display:block;margin-top:2px;line-height:1.4}
+.value-input{display:flex;align-items:center;background:var(--bg);border:1.5px solid var(--line);border-radius:var(--r-sm);padding:0 12px;min-width:130px;max-width:100%;transition:.15s}
+.value-input:focus-within{border-color:var(--forest);background:#fff;box-shadow:0 0 0 4px rgba(47,104,68,.12)}
+.value-input .prefix{font:13px 'IBM Plex Mono',monospace;color:var(--ink-muted)}
+.value-input input{border:0;background:transparent;font:500 16px 'IBM Plex Mono',monospace;color:var(--ink);padding:10px 6px;width:100%;min-width:0;outline:none;text-align:right}
+.value-input input:focus-visible{outline:none}
+
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:999px;margin:6px 0;cursor:pointer;touch-action:pan-y;outline:none;
+  background:linear-gradient(90deg,var(--forest) var(--fill,50%),var(--bg-soft) var(--fill,50%))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#fff;border:4px solid var(--forest);box-shadow:0 2px 6px rgba(0,0,0,.22);transition:transform .12s}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:4px solid var(--forest)}
+input[type=range]:active::-webkit-slider-thumb{transform:scale(1.15)}
+.rate-field .value-input{background:var(--gold-soft);border-color:#EBD6A6}
+.rate-field input[type=range]{background:linear-gradient(90deg,var(--gold-deep) var(--fill,46%),var(--bg-soft) var(--fill,46%))}
+.rate-field input[type=range]::-webkit-slider-thumb,.rate-field input[type=range]::-moz-range-thumb{border-color:var(--gold-deep)}
+
+.reset-btn{margin-top:26px;width:100%;background:transparent;border:1.5px solid var(--line);color:var(--ink-muted);font:600 13.5px 'Plus Jakarta Sans',sans-serif;min-height:46px;border-radius:var(--r-sm);cursor:pointer;transition:.15s}
+.reset-btn:hover{background:var(--bg-soft);color:var(--ink)}
+
+/* Results */
+.results{display:flex;flex-direction:column;gap:18px;min-width:0}
+.headline-card{border-radius:var(--r-lg);padding:clamp(24px,4vw,34px);color:#fff;position:relative;overflow:hidden;
+  background:radial-gradient(500px 220px at 100% 0,rgba(217,164,65,.28),transparent 70%),linear-gradient(135deg,#1E4A30,#112E1D);box-shadow:0 20px 40px -20px rgba(17,46,29,.7)}
+.headline-card::after{content:"";position:absolute;right:-60px;bottom:-60px;width:200px;height:200px;border-radius:50%;box-shadow:0 0 0 24px rgba(255,255,255,.04),0 0 0 52px rgba(255,255,255,.03),0 0 0 82px rgba(255,255,255,.02);pointer-events:none}
+.headline-label{font:12px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#B7CDBE;margin:0 0 10px}
+.headline-number{font-family:'Fraunces',serif;font-weight:650;font-size:clamp(32px,8vw,58px);line-height:1.05;letter-spacing:-.025em;color:#F6D58E;margin:0 0 14px;word-break:break-word}
+.headline-summary{font-size:14.5px;color:#D4E2D8;line-height:1.65;margin:0;max-width:580px;position:relative}
+.headline-summary strong{color:#fff;font-weight:600}
+
+.chart-card{border-radius:var(--r-lg);padding:22px 20px 14px}
+.chart-head{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px}
+.chart-title{font-family:'Fraunces',serif;font-weight:600;font-size:17.5px;margin:0 0 3px}
+.chart-title-sub{font-size:12.5px;color:var(--ink-faint);margin:0}
+.legend{display:flex;gap:16px;font-size:12.5px;color:var(--ink-muted);font-weight:500;flex-wrap:wrap}
+.legend>span{display:flex;align-items:center;gap:6px}
+.swatch{width:10px;height:10px;border-radius:3px;display:inline-block}
+.chart-canvas-wrap{position:relative;width:100%;height:320px;margin-top:10px}
+canvas#growthChart{width:100%;height:100%;display:block;cursor:crosshair;touch-action:pan-y}
+.tooltip{position:absolute;pointer-events:none;background:var(--forest-deep);color:#F3F5EE;padding:11px 14px;border-radius:12px;font-size:12.5px;line-height:1.65;box-shadow:0 10px 24px -8px rgba(0,0,0,.4);opacity:0;transition:opacity .1s;z-index:5;white-space:nowrap}
+.tooltip .t-year{font:11px 'IBM Plex Mono',monospace;color:#B7CDBE;margin-bottom:3px;display:block}
+.tooltip .t-row{display:flex;justify-content:space-between;gap:16px}
+.tooltip .t-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:6px}
+
+.stat-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.stat-card{border-radius:var(--r-md);padding:18px}
+.stat-card .swatch{display:block;width:24px;height:6px;border-radius:4px;margin-bottom:12px}
+.stat-label{font-size:12.5px;color:var(--ink-muted);font-weight:600;margin:0 0 6px}
+.stat-value{font:500 clamp(15px,2vw,19px) 'IBM Plex Mono',monospace;margin:0;word-break:break-word}
+
+footer.note{margin-top:32px;font-size:12px;color:var(--ink-faint);line-height:1.65;max-width:680px;padding-top:18px;border-top:1px solid var(--line)}
+
+/* 4% rule */
+.fi-layout{display:flex;justify-content:center}
+.fi-card{border-radius:var(--r-lg);padding:clamp(24px,5vw,36px);max-width:520px;width:100%}
+.fi-calc-btn{margin-top:26px;width:100%;background:linear-gradient(135deg,var(--forest),var(--forest-deep));border:0;color:#fff;font:700 14.5px 'Plus Jakarta Sans',sans-serif;min-height:52px;padding:0 16px;border-radius:var(--r-sm);cursor:pointer;box-shadow:0 12px 22px -12px rgba(23,59,37,.8);transition:.15s}
+.fi-calc-btn:hover{filter:brightness(1.1)}
+.fi-calc-btn:active{transform:scale(.985)}
+.fi-result{margin-top:26px;padding:22px;border-radius:var(--r-md);background:var(--forest-soft)}
+.fi-result.empty{display:none}
+.fi-result-label{font:12px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--forest);margin:0 0 8px}
+.fi-result-number{font-family:'Fraunces',serif;font-weight:650;font-size:clamp(28px,7vw,44px);line-height:1.1;letter-spacing:-.02em;color:var(--forest-deep);margin:0 0 10px;word-break:break-word}
+.fi-result-note{font-size:13.5px;color:var(--ink-muted);line-height:1.6;margin:0}
+
+/* Tablet & mobile */
+.value-input .prefix{white-space:nowrap;flex:none}
+#fx-field .field-top{flex-wrap:nowrap}
+#fx-field .field-top>div:first-child{flex:1;min-width:0}
+#fx-field .value-input{flex:none;width:260px;min-width:0!important}
+#fx-field .value-input input{flex:1;min-width:0}
+@media (max-width:620px){
+  #fx-field .field-top{flex-wrap:wrap}
+  #fx-field .value-input{width:100%;flex:1 1 100%}
+}
+@media (min-width:621px){
+  .panel{align-items:stretch}
+  .panel .field:not(#fx-field){display:flex;flex-direction:column}
+  .panel .field:not(#fx-field) .field-top{flex:1;flex-direction:column;align-items:stretch;justify-content:space-between;flex-wrap:nowrap;gap:10px;margin-bottom:8px}
+  .panel .field:not(#fx-field) .value-input{width:100%;min-width:0;height:48px}
+  .panel .field:not(#fx-field) input[type=range]{margin:8px 0 4px}
+  #fx-field .field-top{flex-direction:row;align-items:center;margin-bottom:0}
+  .reset-btn{align-self:end}
+}
+@media (max-width:900px){
+  .panel{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:620px){
+  .brand{font-size:16px}
+  .brand svg{width:30px;height:30px}
+  .tabbar{display:flex;width:100%}
+  .tab-btn{flex:1;padding:11px 8px;white-space:normal;line-height:1.25}
+  .panel{padding:22px 18px;grid-template-columns:1fr;gap:20px}
+  .reset-btn{width:100%;justify-self:stretch}
+  .chart-card{padding:18px 14px 10px}
+  .chart-canvas-wrap{height:240px}
+  .stat-grid{grid-template-columns:1fr;gap:10px}
+  .stat-card{display:grid;grid-template-columns:auto 1fr;grid-template-areas:"s l" "s v";column-gap:14px;padding:14px 16px;align-items:center}
+  .stat-card .swatch{grid-area:s;width:6px;height:36px;margin:0}
+  .stat-label{grid-area:l;margin:0 0 2px}
+  .stat-value{grid-area:v}
+  .value-input{flex:1;min-width:0}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top-menu">
+    <div class="brand"><svg viewBox="0 0 40 40" aria-hidden="true"><rect width="40" height="40" rx="11" fill="#173B25"/><circle cx="20" cy="20" r="14" fill="none" stroke="#2F6844" stroke-width="3"/><circle cx="20" cy="20" r="9" fill="none" stroke="#D9A441" stroke-width="3"/><circle cx="20" cy="20" r="4" fill="#F6D58E"/></svg>Growth Layers</div>
+    <button class="lang-toggle-btn" id="lang-toggle-btn" type="button">Switch to ENG/USD</button>
+  </div>
+
+  <header class="hero">
+    <h1 id="hero-title">Biarkan Uang Anda Terus Bertumbuh Setiap Tahun</h1>
+    <p class="hero-sub" id="hero-sub">Tentukan jumlah awal dan kontribusi bulanan, lalu lihat bagaimana bunga majemuk membangun kekayaan seiring waktu — lapis demi lapis, seperti lingkaran tahun pada pohon.</p>
+  </header>
+
+  <nav class="tabbar" role="tablist" aria-label="Alat">
+    <button class="tab-btn active" id="tab-btn-growth" role="tab" aria-selected="true" aria-controls="page-growth" type="button">Simulator Pertumbuhan</button>
+    <button class="tab-btn" id="tab-btn-fi" role="tab" aria-selected="false" aria-controls="page-fi" type="button">Aturan 4%</button>
+  </nav>
+
+  <!-- Halaman: Simulator Pertumbuhan -->
+  <div class="page active" id="page-growth" role="tabpanel" aria-labelledby="tab-btn-growth">
+  <div class="layout">
+
+    <!-- Kontrol -->
+    <section class="panel" aria-label="Input simulasi">
+      <h2 id="panel-title">Rencana Anda</h2>
+      <p class="panel-sub" id="panel-sub">Ubah nilai apa pun dan hasilnya akan langsung diperbarui.</p>
+
+      <div class="field" id="fx-field" style="display:none;">
+        <div class="field-top">
+          <div>
+            <label class="field-label" for="fx-num" id="fx-label">Exchange rate</label>
+            <span class="field-hint" id="fx-hint">Editable anytime — your USD amounts stay the same</span>
+          </div>
+          <div class="value-input" style="min-width:170px;">
+            <span class="prefix">1 USD =</span>
+            <input type="text" inputmode="numeric" id="fx-num" aria-label="Exchange rate: Rupiah per 1 US dollar" style="text-align:right;">
+            <span class="prefix" style="padding-right:8px;">IDR</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-top">
+          <label class="field-label" for="initial-num" id="initial-label">Jumlah awal</label>
+          <div class="value-input">
+            <span class="prefix" id="initial-prefix">Rp</span>
+            <input type="text" inputmode="numeric" id="initial-num" aria-label="Jumlah awal dalam Rupiah">
+          </div>
+        </div>
+        <input type="range" id="initial-range" aria-label="Jumlah awal" min="0" max="1000000000" step="1000000">
+      </div>
+
+      <div class="field">
+        <div class="field-top">
+          <label class="field-label" for="monthly-num" id="monthly-label">Kontribusi bulanan</label>
+          <div class="value-input">
+            <span class="prefix" id="monthly-prefix">Rp</span>
+            <input type="text" inputmode="numeric" id="monthly-num" aria-label="Kontribusi bulanan dalam Rupiah">
+          </div>
+        </div>
+        <input type="range" id="monthly-range" aria-label="Kontribusi bulanan" min="0" max="100000000" step="100000">
+      </div>
+
+      <div class="field rate-field">
+        <div class="field-top">
+          <div>
+            <label class="field-label" for="rate-num" id="rate-label">Imbal hasil tahunan</label>
+            <span class="field-hint" id="rate-hint">Rata-rata pasar jangka panjang ~7%</span>
+          </div>
+          <div class="value-input">
+            <input type="text" inputmode="decimal" id="rate-num" aria-label="Perkiraan imbal hasil tahunan dalam persen" style="text-align:right;">
+            <span class="prefix">%</span>
+          </div>
+        </div>
+        <input type="range" id="rate-range" aria-label="Imbal hasil tahunan" min="0" max="100" step="0.1">
+      </div>
+
+      <div class="field">
+        <div class="field-top">
+          <label class="field-label" for="years-num" id="years-label">Jangka waktu</label>
+          <div class="value-input">
+            <input type="text" inputmode="numeric" id="years-num" aria-label="Jumlah tahun" style="text-align:right;">
+            <span class="prefix" id="years-prefix">thn</span>
+          </div>
+        </div>
+        <input type="range" id="years-range" aria-label="Jangka waktu" min="1" max="50" step="1">
+      </div>
+
+      <button class="reset-btn" id="reset-btn" type="button">Atur ulang ke default</button>
+    </section>
+
+    <!-- Hasil -->
+    <section class="results">
+
+      <div class="headline-card">
+        <p class="headline-label" id="headline-label">Perkiraan saldo</p>
+        <p class="headline-number" id="final-balance">Rp0</p>
+        <p class="headline-summary" id="summary-line"></p>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-head">
+          <div>
+            <p class="chart-title" id="chart-title">Saldo dari waktu ke waktu</p>
+            <p class="chart-title-sub" id="chart-title-sub">Arahkan kursor ke grafik untuk melihat detail tiap tahun</p>
+          </div>
+          <div class="legend">
+            <span><span class="swatch" style="background:var(--gold-deep);"></span><span id="legend-contrib">Kontribusi</span></span>
+            <span><span class="swatch" style="background:var(--forest);"></span><span id="legend-growth">Pertumbuhan</span></span>
+          </div>
+        </div>
+        <div class="chart-canvas-wrap">
+          <canvas id="growthChart"></canvas>
+          <div class="tooltip" id="tooltip"></div>
+        </div>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-card">
+          <span class="swatch" style="background:var(--gold-deep);"></span>
+          <p class="stat-label" id="stat-contributed-label">Total kontribusi</p>
+          <p class="stat-value" id="stat-contributed">Rp0</p>
+        </div>
+        <div class="stat-card">
+          <span class="swatch" style="background:var(--forest);"></span>
+          <p class="stat-label" id="stat-growth-label">Total pertumbuhan</p>
+          <p class="stat-value" id="stat-growth">Rp0</p>
+        </div>
+        <div class="stat-card">
+          <span class="swatch" style="background:var(--ink);"></span>
+          <p class="stat-label" id="stat-final-label">Saldo akhir</p>
+          <p class="stat-value" id="stat-final">Rp0</p>
+        </div>
+      </div>
+
+    </section>
+  </div>
+
+  <footer class="note" id="footer-growth">
+    Alat ini mengasumsikan imbal hasil tahunan yang stabil dan diterapkan setiap bulan, yang mana investasi nyata tidak pernah persis seperti itu — pasar naik turun sepanjang waktu. Angka ini hanya perkiraan untuk eksplorasi, bukan nasihat keuangan atau jaminan kinerja di masa depan.
+  </footer>
+  </div>
+
+  <!-- Halaman: Aturan 4% -->
+  <div class="page" id="page-fi" role="tabpanel" aria-labelledby="tab-btn-fi">
+    <div class="fi-layout">
+      <div class="fi-card">
+        <h2 id="fi-title">Temukan angka kebebasan finansial Anda</h2>
+        <p class="panel-sub" id="fi-sub">Aturan 4% memperkirakan besar portofolio yang Anda butuhkan agar penarikan tahunan sebesar 4% dapat menutupi pengeluaran Anda tanpa batas waktu: 25 &times; pengeluaran tahunan Anda.</p>
+
+        <div class="field">
+          <div class="field-top">
+            <label class="field-label" for="fi-monthly-num" id="fi-monthly-label">Pengeluaran bulanan</label>
+            <div class="value-input">
+              <span class="prefix" id="fi-monthly-prefix">Rp</span>
+              <input type="text" inputmode="numeric" id="fi-monthly-num" aria-label="Pengeluaran bulanan dalam Rupiah" placeholder="0">
+            </div>
+          </div>
+          <input type="range" id="fi-monthly-range" aria-label="Pengeluaran bulanan" min="0" max="100000000" step="100000" style="margin-top:12px;">
+        </div>
+
+        <button class="fi-calc-btn" id="fi-calc-btn" type="button">Hitung Angka Kebebasan Finansial</button>
+
+        <div class="fi-result empty" id="fi-result">
+          <p class="fi-result-label" id="fi-result-label">Angka kebebasan finansial Anda</p>
+          <p class="fi-result-number" id="fi-result-number">Rp0</p>
+          <p class="fi-result-note" id="fi-result-note"></p>
+        </div>
+      </div>
+    </div>
+
+    <footer class="note" id="footer-fi">
+      Ini adalah aturan praktis yang disederhanakan, bukan nasihat keuangan yang dipersonalisasi. Perhitungan ini mengasumsikan pengeluaran Anda tetap stabil dan tidak memperhitungkan pajak, volatilitas pasar, atau perubahan pola pengeluaran seiring waktu.
+    </footer>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  const DEFAULTS = { initial: 5000000, monthly: 1000000, rate: 7, years: 20 };
+
+  const els = {
+    initialNum: document.getElementById('initial-num'),
+    initialRange: document.getElementById('initial-range'),
+    monthlyNum: document.getElementById('monthly-num'),
+    monthlyRange: document.getElementById('monthly-range'),
+    rateNum: document.getElementById('rate-num'),
+    rateRange: document.getElementById('rate-range'),
+    yearsNum: document.getElementById('years-num'),
+    yearsRange: document.getElementById('years-range'),
+    resetBtn: document.getElementById('reset-btn'),
+    finalBalance: document.getElementById('final-balance'),
+    summaryLine: document.getElementById('summary-line'),
+    statContributed: document.getElementById('stat-contributed'),
+    statGrowth: document.getElementById('stat-growth'),
+    statFinal: document.getElementById('stat-final'),
+    canvas: document.getElementById('growthChart'),
+    tooltip: document.getElementById('tooltip'),
+    chartWrap: document.querySelector('.chart-canvas-wrap'),
+  };
+
+  const ctx = els.canvas.getContext('2d');
+  let currentData = [];
+  let state = { ...DEFAULTS };
+
+  // ---- Bahasa & mata uang ----
+  // Semua nilai uang disimpan secara internal dalam Rupiah (IDR); tampilan
+  // dikonversi ke USD saat mode Inggris aktif memakai kurs tetap di bawah.
+  let RATE_IDR_PER_USD = 18000; // bisa diubah pengguna (mode ENG)
+  let lang = 'id';
+
+  const T = {
+    id: {
+      toggleBtn: 'Switch to ENG/USD',
+      heroTitle: 'Biarkan Uang Anda Terus Bertumbuh Setiap Tahun',
+      heroSub: 'Tentukan jumlah awal dan kontribusi bulanan, lalu lihat bagaimana bunga majemuk membangun kekayaan seiring waktu — lapis demi lapis, seperti lingkaran tahun pada pohon.',
+      tabGrowth: 'Simulator Pertumbuhan',
+      tabFi: 'Aturan 4%',
+      panelTitle: 'Rencana Anda',
+      panelSub: 'Ubah nilai apa pun dan hasilnya akan langsung diperbarui.',
+      initialLabel: 'Jumlah awal',
+      monthlyLabel: 'Kontribusi bulanan',
+      rateLabel: 'Imbal hasil tahunan',
+      rateHint: 'Rata-rata pasar jangka panjang ~7%',
+      yearsLabel: 'Jangka waktu',
+      yearsSuffix: 'thn',
+      resetBtn: 'Atur ulang ke default',
+      headlineLabel: 'Perkiraan saldo',
+      chartTitle: 'Saldo dari waktu ke waktu',
+      chartTitleSub: 'Arahkan kursor ke grafik untuk melihat detail tiap tahun',
+      legendContrib: 'Kontribusi',
+      legendGrowth: 'Pertumbuhan',
+      statContribLabel: 'Total kontribusi',
+      statGrowthLabel: 'Total pertumbuhan',
+      statFinalLabel: 'Saldo akhir',
+      footerGrowth: 'Alat ini mengasumsikan imbal hasil tahunan yang stabil dan diterapkan setiap bulan, yang mana investasi nyata tidak pernah persis seperti itu — pasar naik turun sepanjang waktu. Angka ini hanya perkiraan untuk eksplorasi, bukan nasihat keuangan atau jaminan kinerja di masa depan.',
+      fiTitle: 'Temukan angka kebebasan finansial Anda',
+      fiSub: 'Aturan 4% memperkirakan besar portofolio yang Anda butuhkan agar penarikan tahunan sebesar 4% dapat menutupi pengeluaran Anda tanpa batas waktu: 25 &times; pengeluaran tahunan Anda.',
+      fiMonthlyLabel: 'Pengeluaran bulanan',
+      fiCalcBtn: 'Hitung Angka Kebebasan Finansial',
+      fiResultLabel: 'Angka kebebasan finansial Anda',
+      footerFi: 'Ini adalah aturan praktis yang disederhanakan, bukan nasihat keuangan yang dipersonalisasi. Perhitungan ini mengasumsikan pengeluaran Anda tetap stabil dan tidak memperhitungkan pajak, volatilitas pasar, atau perubahan pola pengeluaran seiring waktu.',
+      tooltipYear: 'Tahun',
+      tooltipContrib: 'Kontribusi',
+      tooltipGrowth: 'Pertumbuhan',
+      tooltipBalance: 'Saldo',
+      axisYear: 'Thn',
+      summaryLine: (years, contributed, growth, rate) => `Selama <strong>${years} tahun</strong>, Anda akan berkontribusi <strong>${contributed}</strong> dan memperoleh perkiraan pertumbuhan sebesar <strong>${growth}</strong> pada imbal hasil ${rate}% per tahun.`,
+      fiResultNote: (monthly, yearly) => `Berdasarkan pengeluaran bulanan sebesar <strong>${monthly}</strong> (${yearly} per tahun), yang diinvestasikan dan ditarik sebesar 4% setiap tahun.`,
+      docTitle: 'Growth Layers — Simulator Investasi Jangka Panjang'
+    },
+    en: {
+      toggleBtn: 'Switch to ID/IDR',
+      heroTitle: 'Watch your money grow, year by year',
+      heroSub: 'Set a starting amount and monthly contribution, then see how compound interest builds wealth over time — layer by layer, like growth rings on a tree.',
+      tabGrowth: 'Growth Simulator',
+      tabFi: '4% Rule',
+      panelTitle: 'Your Plan',
+      panelSub: 'Change any value and the results update instantly.',
+      initialLabel: 'Starting amount',
+      monthlyLabel: 'Monthly contribution',
+      rateLabel: 'Annual return',
+      rateHint: 'Long-term market average ~7%',
+      yearsLabel: 'Time horizon',
+      yearsSuffix: 'yrs',
+      resetBtn: 'Reset to default',
+      headlineLabel: 'Estimated balance',
+      chartTitle: 'Balance over time',
+      chartTitleSub: 'Hover over the chart to see details for each year',
+      legendContrib: 'Contributions',
+      legendGrowth: 'Growth',
+      statContribLabel: 'Total contributions',
+      statGrowthLabel: 'Total growth',
+      statFinalLabel: 'Final balance',
+      footerGrowth: 'This tool assumes a steady annual return applied every month, which real investments never quite match — markets move up and down over time. These figures are estimates for exploration only, not financial advice or a guarantee of future performance.',
+      fiTitle: 'Find your financial independence number',
+      fiSub: 'The 4% rule estimates the portfolio size you need so that a 4% annual withdrawal can cover your expenses indefinitely: 25 &times; your annual expenses.',
+      fiMonthlyLabel: 'Monthly expenses',
+      fiCalcBtn: 'Calculate Financial Independence Number',
+      fiResultLabel: 'Your financial independence number',
+      footerFi: 'This is a simplified rule of thumb, not personalized financial advice. The calculation assumes your expenses stay stable and does not account for taxes, market volatility, or changes in spending over time.',
+      tooltipYear: 'Year',
+      tooltipContrib: 'Contributions',
+      tooltipGrowth: 'Growth',
+      tooltipBalance: 'Balance',
+      axisYear: 'Yr',
+      summaryLine: (years, contributed, growth, rate) => `Over <strong>${years} years</strong>, you'll contribute <strong>${contributed}</strong> and earn an estimated <strong>${growth}</strong> in growth at an annual return of ${rate}%.`,
+      fiResultNote: (monthly, yearly) => `Based on monthly expenses of <strong>${monthly}</strong> (${yearly} per year), invested and withdrawn at 4% each year.`,
+      docTitle: 'Growth Layers — Long-Term Investment Simulator'
+    }
+  };
+
+  // Rentang slider (mata uang) per mode bahasa
+  const RANGES = {
+    id: { initial: { max: 10000000000, step: 10000000 }, monthly: { max: 1000000000, step: 1000000 }, fiMonthly: { max: 100000000, step: 100000 } },
+    en: { initial: { max: 1000000, step: 100 }, monthly: { max: 1000000, step: 100 }, fiMonthly: { max: 6250, step: 5 } }
+  };
+
+  // Konversi nilai kanonik (selalu IDR) <-> nilai yang ditampilkan pada mode saat ini
+  const toDisplay = (idrAmount) => lang === 'id' ? idrAmount : Math.round(idrAmount / RATE_IDR_PER_USD);
+  const toCanonical = (displayAmount) => lang === 'id' ? displayAmount : Math.round(displayAmount * RATE_IDR_PER_USD);
+
+  const fmtCurrency = (nIDR) => lang === 'id'
+    ? 'Rp' + Math.round(nIDR).toLocaleString('id-ID')
+    : '$' + Math.round(nIDR / RATE_IDR_PER_USD).toLocaleString('en-US');
+  const fmtCurrencyPrecise = (nIDR) => lang === 'id'
+    ? Math.round(nIDR).toLocaleString('id-ID')
+    : Math.round(nIDR / RATE_IDR_PER_USD).toLocaleString('en-US');
+
+  function syncRangeFill(rangeEl){
+    const min = parseFloat(rangeEl.min), max = parseFloat(rangeEl.max), val = parseFloat(rangeEl.value);
+    const pct = ((val - min) / (max - min)) * 100;
+    rangeEl.style.setProperty('--fill', pct + '%');
+  }
+
+  function simulate(initial, monthly, ratePct, years){
+    const r = (ratePct / 100) / 12;
+    let balance = initial;
+    let contributed = initial;
+    const points = [{ year: 0, balance: initial, contributed: initial }];
+    for (let y = 1; y <= years; y++){
+      for (let m = 0; m < 12; m++){
+        balance = balance * (1 + r) + monthly;
+        contributed += monthly;
+      }
+      points.push({ year: y, balance, contributed });
+    }
+    return points;
+  }
+
+  function applyCurrencyRanges(){
+    const r = RANGES[lang];
+    els.initialRange.min = 0; els.initialRange.max = r.initial.max; els.initialRange.step = r.initial.step;
+    els.monthlyRange.min = 0; els.monthlyRange.max = r.monthly.max; els.monthlyRange.step = r.monthly.step;
+  }
+
+  function updateInputsFromState(){
+    applyCurrencyRanges();
+    els.initialNum.value = fmtCurrencyPrecise(state.initial);
+    els.initialRange.value = toDisplay(state.initial);
+    els.monthlyNum.value = fmtCurrencyPrecise(state.monthly);
+    els.monthlyRange.value = toDisplay(state.monthly);
+    els.rateNum.value = state.rate.toFixed(1);
+    els.rateRange.value = state.rate;
+    els.yearsNum.value = state.years;
+    els.yearsRange.value = state.years;
+    [els.initialRange, els.monthlyRange, els.rateRange, els.yearsRange].forEach(syncRangeFill);
+  }
+
+  function recompute(){
+    currentData = simulate(state.initial, state.monthly, state.rate, state.years);
+    const last = currentData[currentData.length - 1];
+    const growth = last.balance - last.contributed;
+
+    els.finalBalance.textContent = fmtCurrency(last.balance);
+    els.statContributed.textContent = fmtCurrency(last.contributed);
+    els.statGrowth.textContent = fmtCurrency(growth);
+    els.statFinal.textContent = fmtCurrency(last.balance);
+
+    els.summaryLine.innerHTML = T[lang].summaryLine(state.years, fmtCurrency(last.contributed), fmtCurrency(growth), state.rate.toFixed(1));
+
+    drawChart();
+  }
+
+  // ---- Grafik canvas ----
+  function resizeCanvas(){
+    const rect = els.chartWrap.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    els.canvas.width = rect.width * dpr;
+    els.canvas.height = rect.height * dpr;
+    els.canvas.style.width = rect.width + 'px';
+    els.canvas.style.height = rect.height + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    drawChart();
+  }
+
+  const PAD = { top: 16, right: 14, bottom: 28, left: 14 };
+
+  function getPlotArea(){
+    const rect = els.chartWrap.getBoundingClientRect();
+    return {
+      w: rect.width - PAD.left - PAD.right,
+      h: rect.height - PAD.top - PAD.bottom,
+      rectW: rect.width,
+      rectH: rect.height
+    };
+  }
+
+  function drawChart(){
+    if (!currentData.length) return;
+    const rect = els.chartWrap.getBoundingClientRect();
+    if (rect.width === 0) return;
+    ctx.clearRect(0, 0, rect.width, rect.height);
+
+    const { w, h } = getPlotArea();
+    const maxBalance = Math.max(...currentData.map(d => d.balance)) * 1.06 || 1;
+    const n = currentData.length;
+
+    const xAt = (i) => PAD.left + (w * i) / (n - 1 || 1);
+    const yAt = (val) => PAD.top + h - (h * val) / maxBalance;
+
+    // garis kisi
+    ctx.strokeStyle = '#E7E9DD';
+    ctx.lineWidth = 1;
+    const gridLines = 4;
+    for (let g = 0; g <= gridLines; g++){
+      const gy = PAD.top + (h * g) / gridLines;
+      ctx.beginPath();
+      ctx.moveTo(PAD.left, gy);
+      ctx.lineTo(PAD.left + w, gy);
+      ctx.stroke();
+    }
+
+    // lapisan kontribusi (emas)
+    const goldGrad = ctx.createLinearGradient(0, PAD.top, 0, PAD.top + h);
+    goldGrad.addColorStop(0, 'rgba(217,164,65,0.55)');
+    goldGrad.addColorStop(1, 'rgba(217,164,65,0.18)');
+
+    ctx.beginPath();
+    ctx.moveTo(xAt(0), PAD.top + h);
+    currentData.forEach((d, i) => ctx.lineTo(xAt(i), yAt(d.contributed)));
+    ctx.lineTo(xAt(n - 1), PAD.top + h);
+    ctx.closePath();
+    ctx.fillStyle = goldGrad;
+    ctx.fill();
+
+    ctx.beginPath();
+    currentData.forEach((d, i) => {
+      const x = xAt(i), y = yAt(d.contributed);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.strokeStyle = '#B9822A';
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+
+    // lapisan pertumbuhan (hijau hutan) ditumpuk di atas
+    const greenGrad = ctx.createLinearGradient(0, PAD.top, 0, PAD.top + h);
+    greenGrad.addColorStop(0, 'rgba(47,104,68,0.6)');
+    greenGrad.addColorStop(1, 'rgba(47,104,68,0.22)');
+
+    ctx.beginPath();
+    currentData.forEach((d, i) => {
+      const x = xAt(i), y = yAt(d.contributed);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    for (let i = n - 1; i >= 0; i--){
+      ctx.lineTo(xAt(i), yAt(currentData[i].balance));
+    }
+    ctx.closePath();
+    ctx.fillStyle = greenGrad;
+    ctx.fill();
+
+    ctx.beginPath();
+    currentData.forEach((d, i) => {
+      const x = xAt(i), y = yAt(d.balance);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.strokeStyle = '#2F6844';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // label sumbu-x (tahun awal, tengah, akhir)
+    ctx.fillStyle = '#9AA294';
+    ctx.font = '11px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText(T[lang].axisYear + ' 0', xAt(0), PAD.top + h + 18);
+    ctx.textAlign = 'center';
+    const midIdx = Math.floor((n - 1) / 2);
+    ctx.fillText(T[lang].axisYear + ' ' + currentData[midIdx].year, xAt(midIdx), PAD.top + h + 18);
+    ctx.textAlign = 'right';
+    ctx.fillText(T[lang].axisYear + ' ' + currentData[n - 1].year, xAt(n - 1), PAD.top + h + 18);
+  }
+
+  function handleHover(evt){
+    if (!currentData.length) return;
+    const rect = els.chartWrap.getBoundingClientRect();
+    const clientX = (evt.touches ? evt.touches[0].clientX : evt.clientX) - rect.left;
+    const { w } = getPlotArea();
+    const n = currentData.length;
+    const relX = clientX - PAD.left;
+    let idx = Math.round((relX / w) * (n - 1));
+    idx = Math.max(0, Math.min(n - 1, idx));
+    const d = currentData[idx];
+    if (!d) return;
+
+    const x = PAD.left + (w * idx) / (n - 1 || 1);
+    els.tooltip.style.opacity = '1';
+    let left = x + 14;
+    if (left + 190 > rect.width) left = Math.max(4, x - 190);
+    els.tooltip.style.left = left + 'px';
+    els.tooltip.style.top = '10px';
+
+    const growth = d.balance - d.contributed;
+    els.tooltip.innerHTML = `
+      <span class="t-year">${T[lang].tooltipYear} ${d.year}</span>
+      <div class="t-row"><span><span class="t-dot" style="background:#D9A441;"></span>${T[lang].tooltipContrib}</span><span>${fmtCurrency(d.contributed)}</span></div>
+      <div class="t-row"><span><span class="t-dot" style="background:#2F6844;"></span>${T[lang].tooltipGrowth}</span><span>${fmtCurrency(growth)}</span></div>
+      <div class="t-row" style="margin-top:3px; border-top:1px solid rgba(255,255,255,0.2); padding-top:3px;"><span>${T[lang].tooltipBalance}</span><span><strong>${fmtCurrency(d.balance)}</strong></span></div>
+    `;
+  }
+
+  function hideTooltip(){
+    els.tooltip.style.opacity = '0';
+  }
+
+  els.canvas.addEventListener('mousemove', handleHover);
+  els.canvas.addEventListener('mouseleave', hideTooltip);
+  els.canvas.addEventListener('touchmove', (e) => { handleHover(e); }, { passive: true });
+  els.canvas.addEventListener('touchend', hideTooltip);
+
+  // ---- Pengkabelan input ----
+  // Untuk field non-mata uang (mis. persentase), titik berarti desimal.
+  function parseNum(str, fallback){
+    const cleaned = String(str).replace(/[^0-9.]/g, '');
+    const n = parseFloat(cleaned);
+    return isNaN(n) ? fallback : n;
+  }
+
+  // Untuk field Rupiah: format id-ID memakai titik sebagai pemisah ribuan
+  // (mis. "5.000.000"), bukan desimal — jadi titik harus dibuang, bukan dianggap koma desimal.
+  function parseCurrency(str, fallback){
+    const cleaned = String(str).replace(/[^0-9]/g, '');
+    if (cleaned === '') return fallback;
+    const n = parseInt(cleaned, 10);
+    return isNaN(n) ? fallback : n;
+  }
+
+  function wireField(rangeEl, numEl, min, max, key, isFloat, isCurrency){
+    rangeEl.addEventListener('input', () => {
+      if (isCurrency){
+        const displayVal = parseFloat(rangeEl.value);
+        state[key] = toCanonical(displayVal);
+      } else {
+        state[key] = isFloat ? parseFloat(rangeEl.value) : parseInt(rangeEl.value, 10);
+      }
+      updateInputsFromState();
+      recompute();
+    });
+    numEl.addEventListener('input', () => {
+      if (isCurrency){
+        const curMax = RANGES[lang][key].max;
+        let displayVal = parseCurrency(numEl.value, toDisplay(state[key]));
+        displayVal = Math.max(0, Math.min(curMax, displayVal));
+        state[key] = toCanonical(displayVal);
+        rangeEl.value = displayVal;
+        syncRangeFill(rangeEl);
+        recompute();
+        return;
+      }
+      let val = isFloat ? parseNum(numEl.value, state[key]) : parseCurrency(numEl.value, state[key]);
+      val = Math.max(min, Math.min(max, val));
+      state[key] = val;
+      rangeEl.value = val;
+      syncRangeFill(rangeEl);
+      recompute();
+    });
+    numEl.addEventListener('blur', () => { updateInputsFromState(); });
+  }
+
+  wireField(els.initialRange, els.initialNum, 0, 1000000000, 'initial', false, true);
+  wireField(els.monthlyRange, els.monthlyNum, 0, 100000000, 'monthly', false, true);
+  wireField(els.rateRange, els.rateNum, 0, 100, 'rate', true, false);
+  wireField(els.yearsRange, els.yearsNum, 1, 60, 'years', false, false);
+
+  els.resetBtn.addEventListener('click', () => {
+    state = { ...DEFAULTS };
+    updateInputsFromState();
+    recompute();
+  });
+
+  window.addEventListener('resize', resizeCanvas);
+
+  // inisialisasi
+  updateInputsFromState();
+  recompute();
+  requestAnimationFrame(resizeCanvas);
+
+  // ---- Peralihan tab ----
+  const tabBtnGrowth = document.getElementById('tab-btn-growth');
+  const tabBtnFi = document.getElementById('tab-btn-fi');
+  const pageGrowth = document.getElementById('page-growth');
+  const pageFi = document.getElementById('page-fi');
+
+  function activateTab(name){
+    const isGrowth = name === 'growth';
+    tabBtnGrowth.classList.toggle('active', isGrowth);
+    tabBtnFi.classList.toggle('active', !isGrowth);
+    tabBtnGrowth.setAttribute('aria-selected', isGrowth ? 'true' : 'false');
+    tabBtnFi.setAttribute('aria-selected', !isGrowth ? 'true' : 'false');
+    pageGrowth.classList.toggle('active', isGrowth);
+    pageFi.classList.toggle('active', !isGrowth);
+    if (isGrowth) requestAnimationFrame(resizeCanvas);
+  }
+
+  tabBtnGrowth.addEventListener('click', () => activateTab('growth'));
+  tabBtnFi.addEventListener('click', () => activateTab('fi'));
+
+  // ---- Kalkulator Aturan 4% ----
+  // fiMonthlyIDR menyimpan nilai kanonik dalam Rupiah, terlepas dari mode bahasa aktif.
+  const fiMonthlyInput = document.getElementById('fi-monthly-num');
+  const fiMonthlyRange = document.getElementById('fi-monthly-range');
+  const fiCalcBtn = document.getElementById('fi-calc-btn');
+  const fiResult = document.getElementById('fi-result');
+  const fiResultNumber = document.getElementById('fi-result-number');
+  const fiResultNote = document.getElementById('fi-result-note');
+  let fiMonthlyIDR = 0;
+  let fiHasResult = false;
+
+  function calculateFiNumber(){
+    const fiNumber = fiMonthlyIDR * 25 * 12;
+    fiHasResult = true;
+    fiResult.classList.remove('empty');
+    fiResultNumber.textContent = fmtCurrency(fiNumber);
+    fiResultNote.innerHTML = T[lang].fiResultNote(fmtCurrency(fiMonthlyIDR), fmtCurrency(fiMonthlyIDR * 12));
+  }
+
+  function applyFiCurrencyRange(){
+    fiMonthlyRange.min = 0;
+    fiMonthlyRange.max = RANGES[lang].fiMonthly.max;
+    fiMonthlyRange.step = RANGES[lang].fiMonthly.step;
+    fiMonthlyRange.value = toDisplay(fiMonthlyIDR);
+    fiMonthlyInput.value = fiMonthlyIDR ? fmtCurrencyPrecise(fiMonthlyIDR) : '';
+    syncRangeFill(fiMonthlyRange);
+  }
+
+  fiMonthlyRange.addEventListener('input', () => {
+    const displayVal = parseInt(fiMonthlyRange.value, 10);
+    fiMonthlyIDR = toCanonical(displayVal);
+    fiMonthlyInput.value = fmtCurrencyPrecise(fiMonthlyIDR);
+    syncRangeFill(fiMonthlyRange);
+    calculateFiNumber();
+  });
+  fiMonthlyInput.addEventListener('input', () => {
+    const curMax = RANGES[lang].fiMonthly.max;
+    let displayVal = parseCurrency(fiMonthlyInput.value, 0);
+    displayVal = Math.max(0, Math.min(curMax, displayVal));
+    fiMonthlyIDR = toCanonical(displayVal);
+    fiMonthlyRange.value = displayVal;
+    syncRangeFill(fiMonthlyRange);
+  });
+  fiMonthlyInput.addEventListener('blur', () => {
+    fiMonthlyInput.value = fiMonthlyIDR ? fmtCurrencyPrecise(fiMonthlyIDR) : '';
+  });
+
+  fiCalcBtn.addEventListener('click', calculateFiNumber);
+  fiMonthlyInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') calculateFiNumber();
+  });
+
+  syncRangeFill(fiMonthlyRange);
+
+  // ---- Peralihan bahasa / mata uang ----
+  const langToggleBtn = document.getElementById('lang-toggle-btn');
+
+  function applyStaticText(){
+    const t = T[lang];
+    document.documentElement.lang = lang === 'id' ? 'id' : 'en';
+    document.title = t.docTitle;
+    langToggleBtn.textContent = t.toggleBtn;
+    document.getElementById('hero-title').textContent = t.heroTitle;
+    document.getElementById('hero-sub').textContent = t.heroSub;
+    tabBtnGrowth.textContent = t.tabGrowth;
+    tabBtnFi.textContent = t.tabFi;
+    document.getElementById('panel-title').textContent = t.panelTitle;
+    document.getElementById('panel-sub').textContent = t.panelSub;
+    document.getElementById('initial-label').textContent = t.initialLabel;
+    document.getElementById('initial-prefix').textContent = lang === 'id' ? 'Rp' : '$';
+    document.getElementById('monthly-label').textContent = t.monthlyLabel;
+    document.getElementById('monthly-prefix').textContent = lang === 'id' ? 'Rp' : '$';
+    document.getElementById('rate-label').textContent = t.rateLabel;
+    document.getElementById('rate-hint').textContent = t.rateHint;
+    document.getElementById('years-label').textContent = t.yearsLabel;
+    document.getElementById('years-prefix').textContent = t.yearsSuffix;
+    els.resetBtn.textContent = t.resetBtn;
+    document.getElementById('headline-label').textContent = t.headlineLabel;
+    document.getElementById('chart-title').textContent = t.chartTitle;
+    document.getElementById('chart-title-sub').textContent = t.chartTitleSub;
+    document.getElementById('legend-contrib').textContent = t.legendContrib;
+    document.getElementById('legend-growth').textContent = t.legendGrowth;
+    document.getElementById('stat-contributed-label').textContent = t.statContribLabel;
+    document.getElementById('stat-growth-label').textContent = t.statGrowthLabel;
+    document.getElementById('stat-final-label').textContent = t.statFinalLabel;
+    document.getElementById('footer-growth').textContent = t.footerGrowth;
+    document.getElementById('fi-title').textContent = t.fiTitle;
+    document.getElementById('fi-sub').innerHTML = t.fiSub;
+    document.getElementById('fi-monthly-label').textContent = t.fiMonthlyLabel;
+    document.getElementById('fi-monthly-prefix').textContent = lang === 'id' ? 'Rp' : '$';
+    fiCalcBtn.textContent = t.fiCalcBtn;
+    document.getElementById('fi-result-label').textContent = t.fiResultLabel;
+    document.getElementById('footer-fi').textContent = t.footerFi;
+    fiMonthlyInput.placeholder = '0';
+    document.getElementById('fx-field').style.display = lang === 'en' ? '' : 'none';
+    document.getElementById('fx-num').value = RATE_IDR_PER_USD.toLocaleString('en-US');
+  }
+
+  function setLanguage(newLang){
+    lang = newLang;
+    applyStaticText();
+    updateInputsFromState();
+    recompute();
+    applyFiCurrencyRange();
+    if (fiHasResult) calculateFiNumber();
+  }
+
+  langToggleBtn.addEventListener('click', () => {
+    setLanguage(lang === 'id' ? 'en' : 'id');
+  });
+
+  // ---- Kurs USD/IDR yang bisa diedit (mode ENG) ----
+  // Saat kurs berubah, nilai USD yang terlihat tetap sama; nilai internal IDR yang disesuaikan.
+  const fxInput = document.getElementById('fx-num');
+  let fxSnap = null;
+
+  function takeFxSnapshot(){
+    fxSnap = {
+      initial: state.initial / RATE_IDR_PER_USD,
+      monthly: state.monthly / RATE_IDR_PER_USD,
+      fi: fiMonthlyIDR / RATE_IDR_PER_USD
+    };
+  }
+
+  fxInput.addEventListener('focus', takeFxSnapshot);
+  fxInput.addEventListener('input', () => {
+    const cleaned = fxInput.value.replace(/[^0-9]/g, '');
+    const newRate = parseInt(cleaned, 10);
+    if (!newRate || newRate < 1) return;
+    if (!fxSnap) takeFxSnapshot();
+    RATE_IDR_PER_USD = Math.min(newRate, 1000000);
+    state.initial = Math.round(fxSnap.initial * RATE_IDR_PER_USD);
+    state.monthly = Math.round(fxSnap.monthly * RATE_IDR_PER_USD);
+    fiMonthlyIDR = Math.round(fxSnap.fi * RATE_IDR_PER_USD);
+    updateInputsFromState();
+    recompute();
+    applyFiCurrencyRange();
+    if (fiHasResult) calculateFiNumber();
+  });
+  fxInput.addEventListener('blur', () => {
+    fxSnap = null;
+    fxInput.value = RATE_IDR_PER_USD.toLocaleString('en-US');
+  });
+  fxInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') fxInput.blur();
+  });
+})();
+</script>
+</body>
+</html>
